@@ -12,7 +12,7 @@
       </div>
       <div>
         <label for="poster" class="form-label">Poster Image:</label>
-        <input type="file" id="poster" @change="handleFileChange" required>
+        <input type="file" id="poster"  @change="handleFileChange" required>
       </div>
       <button type="submit">Submit</button>
     </form>
@@ -23,20 +23,30 @@
 import { ref, onMounted } from 'vue';
 
 let csrf_token = ref("");
+// const fileInput = ref(null); // Create a ref for the file input
+
 
 function getCsrfToken() {
-  fetch('/api/v1/csrf-token')
-    .then((response) => response.json())
+  fetch('http://192.168.0.2:8080/api/v1/csrf-token')
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
     .then((data) => {
       console.log(data);
       csrf_token.value = data.csrf_token;
     })
+    .catch((error) => {
+      console.error('Error fetching CSRF token:', error);
+    });
 }
 
 const formData = ref({
   title: '',
   description: '',
-  poster: null
+  // poster: null
 });
 
 const saveMovie = () => {
@@ -45,7 +55,7 @@ const saveMovie = () => {
   data.append('description', formData.value.description);
   data.append('poster', formData.value.poster);
 
-  fetch('/api/v1/movies', {
+  fetch('http://192.168.0.2:8080/api/v1/movies', {
     method: 'POST',
     body: data,
     headers: {
@@ -72,6 +82,9 @@ const handleFileChange = (event) => {
 
 onMounted(() => {
   getCsrfToken();
+  // console.log( getCsrfToken() );
+  // console.log( displaycsrf );
+
 });
 </script>
 

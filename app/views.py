@@ -11,6 +11,7 @@ import os
 from app.forms import MovieForm
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import generate_csrf
+from app.models import Movie
 
 
 
@@ -23,20 +24,87 @@ def index():
     return jsonify(message="This is the beginning of our API")
 
 
+# @app.route('/api/v1/movies', methods=['POST'])
+# def movies():
+#     form = MovieForm()
+#     if request.method == 'POST' and form.validate_on_submit():
+#         title = form.title.data
+#         description = form.description.data
+#         upload = form.poster.data
+#         filename = secure_filename(upload.filename)
+#         upload.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+#         movie = {'title': title, 'description': description, 
+#                  'poster': filename
+#                  }
+#         flash('Movie Successfully added!', 'success')
+#         return jsonify({'message': 'Movie Successfully added', 'movie': movie}), 201
+#     errors = form_errors(form)
+#     return jsonify({'errors': errors}), 400
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/api/v1/movies', methods=['POST'])
 def movies():
-    form = MovieForm()
-    if request.method == 'POST' and form.validate_on_submit():
+    form = MovieForm(request.form)
+
+    if request.method == 'POST' and form.validate():
         title = form.title.data
         description = form.description.data
-        upload = form.poster.data
-        filename = secure_filename(upload.filename)
-        upload.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        poster = form.poster.data
+
+        if poster:
+            filename = secure_filename(poster.filename)
+            poster.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        else:
+            filename = None
+
         movie = {'title': title, 'description': description, 'poster': filename}
         flash('Movie Successfully added!', 'success')
         return jsonify({'message': 'Movie Successfully added', 'movie': movie}), 201
-    errors = form_errors(form)
+
+    errors = form.errors
     return jsonify({'errors': errors}), 400
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/api/v1/movies', methods=['GET'])
+def get_movies():
+    # Query all movies from the database
+    movies = Movie.query.all()
+
+    # Convert the movies to a list of dictionaries
+    movies_list = [{'id': movie.id, 'title': movie.title, 'description': movie.description, 'poster': movie.poster} for movie in movies]
+
+    # Return the list of movies as JSON with status code 200 (OK)
+    return jsonify(movies_list), 200
+
 
 
 @app.route('/api/v1/csrf-token', methods=['GET'])
